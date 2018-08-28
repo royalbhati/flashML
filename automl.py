@@ -10,6 +10,7 @@ from sklearn import preprocessing, model_selection, metrics
 
 
 df=pd.read_csv(sys.argv[1])
+test=pd.read_csv(sys.argv[2])
 
 def class_or_regress():
 	print('Shape of your dataset is',df.shape)
@@ -59,9 +60,31 @@ def remove_ids():
 		df.drop(id_cols,axis=1,inplace=True)        
 
 
-def obj_t_cat():
-	for n,c in df.items():
-        if is_string_dtype(c): df[n] = c.astype('category').cat.as_ordered()
+def constant_column():
+	colsToRemove = []
+	for col in df.columns:
+	        if df[col].std() == 0: 
+	            colsToRemove.append(col)
+	        
+	df.drop(colsToRemove, axis=1, inplace=True)
+	test.drop(colsToRemove, axis=1, inplace=True) 
+
+def drop_sparse():
+    flist = [x for x in df.columns]
+    for f in flist:
+        if len(np.unique(df[f]))<2:
+            df.drop(f, axis=1, inplace=True)
+            test.drop(f, axis=1, inplace=True)
+    return df, test
+
+def label_encode():
+	for f in df.columns :
+	        if (df[f].dtype=='object'):
+	           
+	            lbl = preprocessing.LabelEncoder()
+	            lbl.fit(list(df[f].values))
+	            df[f] = lbl.transform(list(df[f].values))
+	            test[f] = lbl.transform(list(test[f].values))
 
 
 print(class_or_regress())
